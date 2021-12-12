@@ -14,9 +14,9 @@
 //   return <div>{children || `the  like snozzberries`}</div>;
 // };
 
-import useSelector from "./Store/Hooks/useSelector";
-import useSetState from "./Store/Hooks/useSetState";
+import useSelector from './Store/Hooks/useSelector';
+import useSetState from './Store/Hooks/useSetState';
 //import useSetStore from "./Hooks/useSetStore";
-import StoreProvider from "./Store/Hooks/StoreProvider";
+import StoreProvider from './Store/Hooks/StoreProvider';
 
 export { StoreProvider, useSelector, useSetState };

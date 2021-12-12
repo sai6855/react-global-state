@@ -1,75 +1,92 @@
 // eslint-disable-next-line no-use-before-define
-import React, { ReactChild, useCallback, useState } from 'react';
+import React, { createContext, ReactChild, useCallback, useState } from 'react';
 
-type context = {
-  state: object;
-  setState: (value: any, paths?: string[]) => void;
-};
+interface Value<StoreType, SetState> {
+  state: StoreType;
+  setState: SetState;
+}
 
-export const Context = React.createContext<context>({
+export const Context = createContext<Value>({
   state: {},
   setState: () => {},
 });
 
-type Props = {
+function StoreProvider<StoreType>({
+  store,
+  children,
+}: {
+  store: StoreType;
   children: ReactChild;
-  store: object;
-};
+}): any {
+  const [state, change] = useState<StoreType>(store);
 
-const StoreProvider = ({ store, children }: Props): any => {
-  const [state, change] = useState(store);
+  type PathImpl<T, Key extends keyof T> = Key extends string
+    ? T[Key] extends Record<string, any>
+      ?
+          | `${Key}.${PathImpl<T[Key], keyof T[Key]>}`
+          | `${Key}.${Exclude<keyof T[Key], keyof any[]> & string}`
+      : never
+    : never;
 
-  const setState = useCallback((callback: any, paths: string[] = []) => {
-    change((prevStore) => {
-      if (typeof callback !== 'function') {
-        let obj = { ...prevStore };
-        paths.reduce((acc: any, path: string) => {
-          if (path === paths[paths.length - 1]) {
-            acc[path] = callback;
-          }
-          return acc[path];
-        }, obj);
+  type Path<T> = PathImpl<T, keyof T> | keyof T;
 
-        return paths.length > 0 ? obj : callback;
+  const setState = useCallback(
+    <P extends Path<StoreType>>(callback: any, keyPaths: P) => {
+      let paths: string[];
+
+      if (typeof keyPaths === 'string') {
+        paths = keyPaths.split('.');
       }
 
-      const newState = callback(
-        [...paths].reduce((acc: any, path: string) => acc[path], prevStore),
-        prevStore
-      );
+      change((prevStore) => {
+        if (typeof callback !== 'function') {
+          let obj = { ...prevStore };
 
-      if (typeof newState === 'function') {
-        newState(setState);
-        return prevStore;
-      }
+          paths.reduce((acc: any, path: string) => {
+            if (path === paths[paths.length - 1]) {
+              acc[path] = callback;
+            }
+            return acc[path];
+          }, obj);
 
-      let obj = {};
-      if (paths.length > 0) {
-        obj = { ...prevStore };
-        paths.reduce((acc: any, path: string) => {
-          if (path === paths[paths.length - 1]) {
-            acc[path] = newState;
-          }
-          return acc[path];
-        }, obj);
-      }
-      return paths.length > 0 ? obj : newState;
-    });
-    //eslint-disable-next-line
-  }, []);
+          return paths.length > 0 ? obj : callback;
+        }
+
+        const newState = callback(
+          [...paths].reduce((acc: any, path: string) => acc[path], prevStore),
+          prevStore
+        );
+
+        if (typeof newState === 'function') {
+          newState(setState);
+          return prevStore;
+        }
+
+        let obj = {};
+        if (paths.length > 0) {
+          obj = { ...prevStore };
+          paths.reduce((acc: any, path: string) => {
+            if (path === paths[paths.length - 1]) {
+              acc[path] = newState;
+            }
+            return acc[path];
+          }, obj);
+        }
+        return paths.length > 0 ? obj : newState;
+      });
+      //eslint-disable-next-line
+    },
+    []
+  );
 
   // console.log(state)
 
-  return (
-    <Context.Provider
-      value={{
-        state,
-        setState,
-      }}
-    >
-      {children}
-    </Context.Provider>
-  );
-};
+  const value: Value<StoreType, typeof setState> = {
+    state,
+    setState,
+  };
+
+  return <Context.Provider value={value}>{children}</Context.Provider>;
+}
 
 export default StoreProvider;
