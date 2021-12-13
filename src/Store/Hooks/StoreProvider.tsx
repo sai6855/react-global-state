@@ -6,7 +6,17 @@ interface Value<StoreType, SetState> {
   setState: SetState;
 }
 
-export const Context = createContext<Value>({
+type PathImpl<T, Key extends keyof T> = Key extends string
+  ? T[Key] extends Record<string, any>
+    ?
+        | `${Key}.${PathImpl<T[Key], keyof T[Key]>}`
+        | `${Key}.${Exclude<keyof T[Key], keyof any[]> & string}`
+    : never
+  : never;
+
+type Path<T> = PathImpl<T, keyof T> | keyof T;
+
+export const Context = createContext({
   state: {},
   setState: () => {},
 });
@@ -17,18 +27,8 @@ function StoreProvider<StoreType>({
 }: {
   store: StoreType;
   children: ReactChild;
-}): any {
-  const [state, change] = useState<StoreType>(store);
-
-  type PathImpl<T, Key extends keyof T> = Key extends string
-    ? T[Key] extends Record<string, any>
-      ?
-          | `${Key}.${PathImpl<T[Key], keyof T[Key]>}`
-          | `${Key}.${Exclude<keyof T[Key], keyof any[]> & string}`
-      : never
-    : never;
-
-  type Path<T> = PathImpl<T, keyof T> | keyof T;
+}) {
+  const [state, change] = useState(store);
 
   const setState = useCallback(
     <P extends Path<StoreType>>(callback: any, keyPaths: P) => {
@@ -86,7 +86,9 @@ function StoreProvider<StoreType>({
     setState,
   };
 
-  return <Context.Provider value={value}>{children}</Context.Provider>;
+  const { Provider } = Context;
+
+  return <Provider value={value}>{children}</Provider>;
 }
 
 export default StoreProvider;
