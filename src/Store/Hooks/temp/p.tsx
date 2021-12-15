@@ -53,7 +53,7 @@ function useProvider<StoreType>(store: StoreType) {
   );
 
   return {
-    state,
+    store: state,
     setState,
   };
 }
