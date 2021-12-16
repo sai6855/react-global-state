@@ -1,6 +1,22 @@
-import React, { ReactChild, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
-function useProvider<StoreType>(store: StoreType) {
+type PathImpl<T, Key extends keyof T> = Key extends string
+  ? T[Key] extends Record<string, any>
+    ?
+        | `${Key}.${PathImpl<T[Key], keyof T[Key]>}`
+        | `${Key}.${Exclude<keyof T[Key], keyof any[]> & string}`
+    : never
+  : never;
+
+type Path<T> = PathImpl<T, keyof T> | keyof T;
+
+export interface IContext<T> {
+  state: T;
+  setState<P extends Path<T>>(callback: any, keyPaths: P): void;
+  getState<P extends Path<T>>(keyPaths: P): any;
+}
+
+export function useProvider<StoreType>(store: StoreType) {
   const [state, change] = React.useState<StoreType>(store);
 
   const setState = useCallback(
@@ -26,7 +42,7 @@ function useProvider<StoreType>(store: StoreType) {
         }
 
         const newState = callback(
-          [...paths].reduce((acc: any, path: string) => acc[path], prevStore),
+          paths.reduce((acc: any, path: string) => acc[path], prevStore),
           prevStore
         );
 
@@ -52,26 +68,25 @@ function useProvider<StoreType>(store: StoreType) {
     []
   );
 
+  const getState = useCallback(
+    <P extends Path<StoreType>>(keyPaths: P) => {
+      let paths: string[] = [];
+
+      if (typeof keyPaths === 'string') {
+        paths = keyPaths.split('.');
+      }
+
+      return paths.length === 0
+        ? state
+        : paths.reduce((acc: any, path: string) => acc[path], state);
+    },
+    //eslint-disable-next-line
+    []
+  );
+
   return {
     state,
     setState,
+    getState,
   };
 }
-
-export const Context = React.createContext(
-  {} as ReturnType<typeof useProvider>
-);
-
-function ContextProvider<StoreType>({
-  store,
-  children,
-}: {
-  store: StoreType;
-  children: ReactChild;
-}) {
-  return (
-    <Context.Provider value={useProvider(store)}>{children}</Context.Provider>
-  );
-}
-
-export default ContextProvider;

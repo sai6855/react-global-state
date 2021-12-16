@@ -11,12 +11,8 @@
 //  * A custom Thing component. Neat!
 //  */
 // export const Thing: FC<Props> = ({ children }) => {
-//   return <div>{children || `the  like snozzberries`}</div>;
-// };
 
-import useSelector from './Store/Hooks/useSelector';
-import useSetState from './Store/Hooks/useSetState';
 //import useSetStore from "./Hooks/useSetStore";
-import StoreProvider from './Store/Hooks/StoreProvider';
+import { IContext, useProvider } from './Store/Hooks/StoreProvider';
 
-export { StoreProvider, useSelector, useSetState };
+export { IContext, useProvider };
