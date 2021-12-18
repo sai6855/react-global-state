@@ -65,10 +65,10 @@ export function useProvider<StoreType>(store: StoreType) {
         if (paths.length > 0) {
           obj = { ...prevStore };
           paths.reduce((acc: any, path: string) => {
-            if (!acc[path]) {
+            if (typeof acc[path] === 'undefined') {
               throw new Error(
                 `We can't find value for path ${paths.join(
-                  '->'
+                  '--> '
                 )}, Add ${path} value in default store and try again`
               );
             }
@@ -97,10 +97,10 @@ export function useProvider<StoreType>(store: StoreType) {
       return paths.length === 0
         ? state
         : paths.reduce((acc: any, path: string) => {
-            if (!acc[path]) {
+            if (typeof acc[path] === 'undefined') {
               throw new Error(
                 `We can't find value for path ${paths.join(
-                  '->'
+                  '--> '
                 )}, Add ${path} value in default store and try again`
               );
             }
@@ -118,24 +118,24 @@ export function useProvider<StoreType>(store: StoreType) {
   };
 }
 //**************************JUNK*******************************
-const object = {
-  firstName: 'Diego',
-  lastName: 'Haz',
-  age: 30,
-  projects: [
-    { name: 'Reakit', contributors: 68 },
-    { name: 'Constate', contributors: 12 },
-  ],
-};
+// const object = {
+//   firstName: 'Diego',
+//   lastName: 'Haz',
+//   age: 30,
+//   projects: [
+//     { name: 'Reakit', contributors: 68 },
+//     { name: 'Constate', contributors: 12 },
+//   ],
+// };
 
 // const { getState } = useProvider(object);
 
 // const val = getState('age');
 
-const Ctx = createContext(object);
-const { getState, setState, state } = useProvider(object);
+// const Ctx = createContext(object);
+// const { getState, setState, state } = useProvider(object);
 
-<Ctx.Provider value={{ state, setState, getState }}>s</Ctx.Provider>;
+// <Ctx.Provider value={{ state, setState, getState }}>s</Ctx.Provider>;
 // **************************JUNK*******************************
 
 export function createContext<T>(state: T) {
