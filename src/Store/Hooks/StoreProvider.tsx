@@ -10,10 +10,10 @@ type PathImpl<T, Key extends keyof T> = Key extends string
 
 type Path<T> = PathImpl<T, keyof T> | keyof T;
 
-export interface IContext<T> {
-  state: T;
-  setState<P extends Path<T>>(callback: any, keyPaths: P): void;
-  getState<P extends Path<T>>(keyPaths: P): any;
+export interface IContext<State> {
+  state: State;
+  setState<P extends Path<State>>(callback: any, keyPaths: P): void;
+  getState<P extends Path<State>>(keyPaths: P): any;
 }
 
 export function useProvider<StoreType>(store: StoreType) {
@@ -21,7 +21,7 @@ export function useProvider<StoreType>(store: StoreType) {
 
   const setState = useCallback(
     <P extends Path<StoreType>>(callback: any, keyPaths: P) => {
-      let paths: string[];
+      let paths: string[] = [];
 
       if (typeof keyPaths === 'string') {
         paths = keyPaths.split('.');
@@ -80,8 +80,7 @@ export function useProvider<StoreType>(store: StoreType) {
         ? state
         : paths.reduce((acc: any, path: string) => acc[path], state);
     },
-    //eslint-disable-next-line
-    []
+    [state]
   );
 
   return {
@@ -89,4 +88,12 @@ export function useProvider<StoreType>(store: StoreType) {
     setState,
     getState,
   };
+}
+
+export function createContext<T>(state: T) {
+  return React.createContext({
+    state,
+    setState: () => {},
+    getState: () => {},
+  } as IContext<T>);
 }
