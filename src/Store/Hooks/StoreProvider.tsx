@@ -10,10 +10,20 @@ type PathImpl<T, Key extends keyof T> = Key extends string
 
 type Path<T> = PathImpl<T, keyof T> | keyof T;
 
+type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
+  ? Key extends keyof T
+    ? Rest extends Path<T[Key]>
+      ? PathValue<T[Key], Rest>
+      : never
+    : never
+  : P extends keyof T
+  ? T[P]
+  : never;
+
 export interface IContext<State> {
   state: State;
   setState<P extends Path<State>>(callback: any, keyPaths: P): void;
-  getState<P extends Path<State>>(keyPaths: P): any;
+  getState<P extends Path<State>>(keyPaths: P): PathValue<State, P>;
 }
 
 export function useProvider<StoreType>(store: StoreType) {
@@ -55,6 +65,14 @@ export function useProvider<StoreType>(store: StoreType) {
         if (paths.length > 0) {
           obj = { ...prevStore };
           paths.reduce((acc: any, path: string) => {
+            if (!acc[path]) {
+              throw new Error(
+                `We can't find value for path ${paths.join(
+                  '->'
+                )}, Add ${path} value in default store and try again`
+              );
+            }
+
             if (path === paths[paths.length - 1]) {
               acc[path] = newState;
             }
@@ -69,7 +87,7 @@ export function useProvider<StoreType>(store: StoreType) {
   );
 
   const getState = useCallback(
-    <P extends Path<StoreType>>(keyPaths: P) => {
+    <P extends Path<StoreType>>(keyPaths: P): PathValue<StoreType, P> => {
       let paths: string[] = [];
 
       if (typeof keyPaths === 'string') {
@@ -78,7 +96,17 @@ export function useProvider<StoreType>(store: StoreType) {
 
       return paths.length === 0
         ? state
-        : paths.reduce((acc: any, path: string) => acc[path], state);
+        : paths.reduce((acc: any, path: string) => {
+            if (!acc[path]) {
+              throw new Error(
+                `We can't find value for path ${paths.join(
+                  '->'
+                )}, Add ${path} value in default store and try again`
+              );
+            }
+
+            return acc[path];
+          }, state);
     },
     [state]
   );
@@ -89,11 +117,31 @@ export function useProvider<StoreType>(store: StoreType) {
     getState,
   };
 }
+//**************************JUNK*******************************
+const object = {
+  firstName: 'Diego',
+  lastName: 'Haz',
+  age: 30,
+  projects: [
+    { name: 'Reakit', contributors: 68 },
+    { name: 'Constate', contributors: 12 },
+  ],
+};
+
+// const { getState } = useProvider(object);
+
+// const val = getState('age');
+
+const Ctx = createContext(object);
+const { getState, setState, state } = useProvider(object);
+
+<Ctx.Provider value={{ state, setState, getState }}>s</Ctx.Provider>;
+// **************************JUNK*******************************
 
 export function createContext<T>(state: T) {
   return React.createContext({
     state,
     setState: () => {},
     getState: () => {},
-  } as IContext<T>);
+  } as unknown as IContext<T>);
 }
