@@ -10,27 +10,42 @@ type PathImpl<T, Key extends keyof T> = Key extends string
 
 type Path<T> = PathImpl<T, keyof T> | keyof T;
 
-type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
-  ? Key extends keyof T
-    ? Rest extends Path<T[Key]>
-      ? PathValue<T[Key], Rest>
-      : never
-    : never
-  : P extends keyof T
-  ? T[P]
-  : never;
+// type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
+//   ? Key extends keyof T
+//     ? Rest extends Path<T[Key]>
+//       ? PathValue<T[Key], Rest>
+//       : never
+//     : never
+//   : P extends keyof T
+//   ? T[P]
+//   : never;
 
+type SetState<State> = <P extends Path<State>>(
+  callback: any,
+  keyPaths: P
+) => void;
+
+type Callback<State> = () => (arg: SetState<State>) => void;
+
+type AsyncSetState<State> = (callBack: Callback<State>) => void;
 export interface IContext<State> {
   state: State;
-  setState<P extends Path<State>>(callback: any, keyPaths: P): void;
-  getState<P extends Path<State>>(keyPaths: P): PathValue<State, P>;
+  setState: SetState<State>;
+  asyncSetState: AsyncSetState<State>;
 }
 
 export function useProvider<StoreType>(store: StoreType) {
   const [state, change] = React.useState<StoreType>(store);
 
+  type CallBack = () => (arg: typeof setState) => void;
+
+  const asyncSetState = useCallback((callback: CallBack) => {
+    const call = callback();
+    call(setState);
+  }, []);
+
   const setState = useCallback(
-    <P extends Path<StoreType>>(callback: any, keyPaths: P) => {
+    <P extends Path<StoreType>>(callback: any, keyPaths?: P) => {
       let paths: string[] = [];
 
       if (typeof keyPaths === 'string') {
@@ -57,8 +72,11 @@ export function useProvider<StoreType>(store: StoreType) {
         );
 
         if (typeof newState === 'function') {
-          newState(setState);
-          return prevStore;
+          throw new Error(
+            "Functions shouldn't be returned from callback, use asyncSetState to handle async state"
+          );
+          // newState(setState);
+          // return prevStore;
         }
 
         let obj = {};
@@ -81,40 +99,15 @@ export function useProvider<StoreType>(store: StoreType) {
         }
         return paths.length > 0 ? obj : newState;
       });
-      //eslint-disable-next-line
     },
+    //eslint-disable-next-line
     []
-  );
-
-  const getState = useCallback(
-    <P extends Path<StoreType>>(keyPaths: P): PathValue<StoreType, P> => {
-      let paths: string[] = [];
-
-      if (typeof keyPaths === 'string') {
-        paths = keyPaths.split('.');
-      }
-
-      return paths.length === 0
-        ? state
-        : paths.reduce((acc: any, path: string) => {
-            if (typeof acc[path] === 'undefined') {
-              throw new Error(
-                `We can't find value for path ${paths.join(
-                  '--> '
-                )}, Add ${path} value in default store and try again`
-              );
-            }
-
-            return acc[path];
-          }, state);
-    },
-    [state]
   );
 
   return {
     state,
     setState,
-    getState,
+    asyncSetState,
   };
 }
 //**************************JUNK*******************************
@@ -142,6 +135,6 @@ export function createContext<T>(state: T) {
   return React.createContext({
     state,
     setState: () => {},
-    getState: () => {},
+    asyncSetState: () => {},
   } as unknown as IContext<T>);
 }
