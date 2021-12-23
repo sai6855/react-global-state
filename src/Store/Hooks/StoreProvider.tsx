@@ -22,27 +22,18 @@ type Path<T> = PathImpl<T, keyof T> | keyof T;
 
 type SetState<State> = <P extends Path<State>>(
   callback: any,
-  keyPaths: P
+  keyPaths?: P
 ) => void;
 
-type Callback<State> = () => (arg: SetState<State>) => void;
-
-type AsyncSetState<State> = (callBack: Callback<State>) => void;
 export interface IContext<State> {
   state: State;
   setState: SetState<State>;
-  asyncSetState: AsyncSetState<State>;
 }
+
+//type Callback<T> = T extends Function ? never : T;
 
 export function useProvider<StoreType>(store: StoreType) {
   const [state, change] = React.useState<StoreType>(store);
-
-  type CallBack = () => (arg: typeof setState) => void;
-
-  const asyncSetState = useCallback((callback: CallBack) => {
-    const call = callback();
-    call(setState);
-  }, []);
 
   const setState = useCallback(
     <P extends Path<StoreType>>(callback: any, keyPaths?: P) => {
@@ -72,9 +63,7 @@ export function useProvider<StoreType>(store: StoreType) {
         );
 
         if (typeof newState === 'function') {
-          throw new Error(
-            "Functions shouldn't be returned from callback, use asyncSetState to handle async state"
-          );
+          throw new Error("Functions shouldn't be returned from callback");
           // newState(setState);
           // return prevStore;
         }
@@ -107,7 +96,6 @@ export function useProvider<StoreType>(store: StoreType) {
   return {
     state,
     setState,
-    asyncSetState,
   };
 }
 //**************************JUNK*******************************
@@ -136,5 +124,5 @@ export function createContext<T>(state: T) {
     state,
     setState: () => {},
     asyncSetState: () => {},
-  } as unknown as IContext<T>);
+  } as IContext<T>);
 }
