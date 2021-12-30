@@ -10,18 +10,23 @@ type PathImpl<T, Key extends keyof T> = Key extends string
 
 type Path<T> = PathImpl<T, keyof T> | keyof T;
 
-// type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
-//   ? Key extends keyof T
-//     ? Rest extends Path<T[Key]>
-//       ? PathValue<T[Key], Rest>
-//       : never
-//     : never
-//   : P extends keyof T
-//   ? T[P]
-//   : never;
+type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
+  ? Key extends keyof T
+    ? Rest extends Path<T[Key]>
+      ? PathValue<T[Key], Rest>
+      : never
+    : never
+  : P extends keyof T
+  ? T[P]
+  : never;
 
 type SetState<State> = <P extends Path<State>>(
-  callback: any,
+  callback:
+    | PathValue<State, P>
+    | ((
+        pathState: P extends string ? PathValue<State, P> : State,
+        store: State
+      ) => PathValue<State, P>),
   keyPaths?: P
 ) => void;
 
@@ -30,13 +35,19 @@ export interface IContext<State> {
   setState: SetState<State>;
 }
 
-//type Callback<T> = T extends Function ? never : T;
-
 export function useProvider<StoreType>(store: StoreType) {
   const [state, change] = React.useState<StoreType>(store);
 
   const setState = useCallback(
-    <P extends Path<StoreType>>(callback: any, keyPaths?: P) => {
+    <P extends Path<StoreType>>(
+      callback:
+        | ((
+            pathState: P extends string ? PathValue<StoreType, P> : StoreType,
+            store: StoreType
+          ) => PathValue<StoreType, P>)
+        | PathValue<StoreType, P>,
+      keyPaths?: P
+    ) => {
       let paths: string[] = [];
 
       if (typeof keyPaths === 'string') {
@@ -54,10 +65,15 @@ export function useProvider<StoreType>(store: StoreType) {
             return acc[path];
           }, obj);
 
-          return paths.length > 0 ? obj : callback;
+          return paths.length > 0 ? obj : (callback as StoreType);
         }
 
-        const newState = callback(
+        const newCallback = callback as (
+          pathState: PathValue<StoreType, P>,
+          store: StoreType
+        ) => PathValue<StoreType, P>;
+
+        const newState = newCallback(
           paths.reduce((acc: any, path: string) => acc[path], prevStore),
           prevStore
         );
@@ -86,10 +102,9 @@ export function useProvider<StoreType>(store: StoreType) {
             return acc[path];
           }, obj);
         }
-        return paths.length > 0 ? obj : newState;
+        return paths.length > 0 ? (obj as StoreType) : (newState as StoreType);
       });
     },
-    //eslint-disable-next-line
     []
   );
 
@@ -123,6 +138,5 @@ export function createContext<T>(state: T) {
   return React.createContext({
     state,
     setState: () => {},
-    asyncSetState: () => {},
   } as IContext<T>);
 }
