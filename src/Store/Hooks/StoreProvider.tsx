@@ -24,13 +24,13 @@ type SetState<State> = <P extends Path<State>>(
   callback:
     | PathValue<State, P>
     | ((
-        pathState: P extends string ? PathValue<State, P> : State,
+        pathState: P extends PathValue<State, P> ? PathValue<State, P> : State,
         store: State
-      ) => PathValue<State, P>),
+      ) => P extends PathValue<State, P> ? PathValue<State, P> : State),
   keyPaths?: P
 ) => void;
 
-export interface IContext<State> {
+interface IContext<State> {
   state: State;
   setState: SetState<State>;
 }
@@ -42,9 +42,13 @@ export function useProvider<StoreType>(store: StoreType) {
     <P extends Path<StoreType>>(
       callback:
         | ((
-            pathState: P extends string ? PathValue<StoreType, P> : StoreType,
+            pathState: P extends PathValue<StoreType, P>
+              ? PathValue<StoreType, P>
+              : StoreType,
             store: StoreType
-          ) => PathValue<StoreType, P>)
+          ) => P extends PathValue<StoreType, P>
+            ? PathValue<StoreType, P>
+            : StoreType)
         | PathValue<StoreType, P>,
       keyPaths?: P
     ) => {
@@ -116,7 +120,6 @@ export function useProvider<StoreType>(store: StoreType) {
 //**************************JUNK*******************************
 // const object = {
 //   firstName: 'Diego',
-//   lastName: 'Haz',
 //   age: 30,
 //   projects: [
 //     { name: 'Reakit', contributors: 68 },
@@ -124,13 +127,11 @@ export function useProvider<StoreType>(store: StoreType) {
 //   ],
 // };
 
-// const { getState } = useProvider(object);
+// const { setState, state } = useProvider(object);
 
-// const val = getState('age');
+// setState((a, b) => a);
 
-// const Ctx = createContext(object);
-// const { getState, setState, state } = useProvider(object);
-
+// // // const Ctx = createContext(object);
 // <Ctx.Provider value={{ state, setState, getState }}>s</Ctx.Provider>;
 // **************************JUNK*******************************
 
