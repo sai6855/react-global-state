@@ -23,30 +23,35 @@ type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
 type SetState<State> = <P extends Path<State>>(
   callback:
     | PathValue<State, P>
-    | ((
-        pathState: P extends string ? PathValue<State, P> : State,
-        store: State
-      ) => P extends string ? PathValue<State, P> : State),
+    | ((pathState: PathValue<State, P>, store: State) => PathValue<State, P>),
   keyPaths?: P
 ) => void;
 
 interface IContext<State> {
-  state: State;
+  state: {
+    store: State;
+  };
   setState: SetState<State>;
 }
 
-export function useProvider<StoreType>(store: StoreType) {
-  const [state, change] = React.useState<StoreType>(store);
+export function useProvider<UserStore>(store: UserStore) {
+  const newStore = {
+    store,
+  };
+
+  type StoreType = typeof newStore;
+
+  const [state, change] = React.useState<StoreType>(newStore);
 
   const setState = useCallback(
     <P extends Path<StoreType>>(
       callback:
         | ((
-            pathState: P extends string ? PathValue<StoreType, P> : StoreType,
+            pathState: PathValue<StoreType, P>,
             store: StoreType
-          ) => P extends string ? PathValue<StoreType, P> : StoreType)
+          ) => PathValue<StoreType, P>)
         | PathValue<StoreType, P>,
-      keyPaths?: P
+      keyPaths: P
     ) => {
       let paths: string[] = [];
 
@@ -114,18 +119,18 @@ export function useProvider<StoreType>(store: StoreType) {
   };
 }
 //**************************JUNK*******************************
-const object = {
-  //firstName: 'Diego',
-  age: 30,
-  projects: [
-    { name: 'Reakit', contributors: 68 },
-    { name: 'Constate', contributors: 12 },
-  ],
-};
+// const object = {
+//   //firstName: 'Diego',
+//   age: 30,
+//   projects: [
+//     { name: 'Reakit', contributors: 68 },
+//     { name: 'Constate', contributors: 12 },
+//   ],
+// };
 
-const { setState, state } = useProvider(object);
+// const { setState, state } = useProvider(object);
 
-setState((a, b) => a);
+// setState((a, b) => a);
 
 // // // const Ctx = createContext(object);
 // <Ctx.Provider value={{ state, setState, getState }}>s</Ctx.Provider>;
@@ -133,7 +138,9 @@ setState((a, b) => a);
 
 export function createContext<T>(state: T) {
   return React.createContext({
-    state,
+    state: {
+      store: state,
+    },
     setState: () => {},
   } as IContext<T>);
 }
