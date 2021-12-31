@@ -24,14 +24,14 @@ type SetState<State> = <P extends Path<State>>(
   callback:
     | PathValue<State, P>
     | ((pathState: PathValue<State, P>, store: State) => PathValue<State, P>),
-  keyPaths?: P
+  keyPaths: P
 ) => void;
 
 type UserState<S> = {
   store: S;
 };
 
-interface IContext<State> {
+export interface IContext<State> {
   state: UserState<State>;
   setState: SetState<UserState<State>>;
 }

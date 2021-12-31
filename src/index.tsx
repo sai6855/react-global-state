@@ -13,6 +13,10 @@
 // export const Thing: FC<Props> = ({ children }) => {
 
 //import useSetStore from "./Hooks/useSetStore";
-import { useProvider, createContext } from './Store/Hooks/StoreProvider';
+import {
+  useProvider,
+  createContext,
+  IContext,
+} from './Store/Hooks/StoreProvider';
 
-export { useProvider, createContext };
+export { useProvider, createContext, IContext };
