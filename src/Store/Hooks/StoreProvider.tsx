@@ -55,8 +55,15 @@ export function useProvider<UserStore>(store: UserStore) {
         | PathValue<StoreType, P>,
       keyPaths: P
     ) => {
+      if (typeof callback === 'undefined') {
+        throw new Error('1st argument is required');
+      }
+      if (typeof keyPaths === 'undefined') {
+        throw new Error('Path is required');
+      }
+
       if (typeof keyPaths !== 'string') {
-        throw new Error('Type of path must be a string and required');
+        throw new Error('Type of path must be a string');
       }
 
       let paths: string[] = [];
