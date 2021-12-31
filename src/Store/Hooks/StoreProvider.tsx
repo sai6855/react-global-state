@@ -55,6 +55,10 @@ export function useProvider<UserStore>(store: UserStore) {
         | PathValue<StoreType, P>,
       keyPaths: P
     ) => {
+      if (typeof keyPaths !== 'string') {
+        throw new Error('Type of path must be a string and required');
+      }
+
       let paths: string[] = [];
 
       if (typeof keyPaths === 'string') {
@@ -121,18 +125,18 @@ export function useProvider<UserStore>(store: UserStore) {
   };
 }
 //**************************JUNK*******************************
-const object = {
-  //firstName: 'Diego',
-  age: 30,
-  projects: [
-    { name: 'Reakit', contributors: 68 },
-    { name: 'Constate', contributors: 12 },
-  ],
-};
+// const object = {
+//   //firstName: 'Diego',
+//   age: 30,
+//   projects: [
+//     { name: 'Reakit', contributors: 68 },
+//     { name: 'Constate', contributors: 12 },
+//   ],
+// };
 
-const { setState, state } = useProvider(object);
+// const { setState, state } = useProvider(object);
 
-setState((a, b) => a, 'store');
+// setState((a, b) => a, 'store');
 
 // // // const Ctx = createContext(object);
 // <Ctx.Provider value={{ state, setState, getState }}>s</Ctx.Provider>;
