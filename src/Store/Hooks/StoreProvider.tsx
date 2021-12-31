@@ -27,11 +27,13 @@ type SetState<State> = <P extends Path<State>>(
   keyPaths?: P
 ) => void;
 
+type UserState<S> = {
+  store: S;
+};
+
 interface IContext<State> {
-  state: {
-    store: State;
-  };
-  setState: SetState<State>;
+  state: UserState<State>;
+  setState: SetState<UserState<State>>;
 }
 
 export function useProvider<UserStore>(store: UserStore) {
@@ -119,18 +121,18 @@ export function useProvider<UserStore>(store: UserStore) {
   };
 }
 //**************************JUNK*******************************
-// const object = {
-//   //firstName: 'Diego',
-//   age: 30,
-//   projects: [
-//     { name: 'Reakit', contributors: 68 },
-//     { name: 'Constate', contributors: 12 },
-//   ],
-// };
+const object = {
+  //firstName: 'Diego',
+  age: 30,
+  projects: [
+    { name: 'Reakit', contributors: 68 },
+    { name: 'Constate', contributors: 12 },
+  ],
+};
 
-// const { setState, state } = useProvider(object);
+const { setState, state } = useProvider(object);
 
-// setState((a, b) => a);
+setState((a, b) => a, 'store');
 
 // // // const Ctx = createContext(object);
 // <Ctx.Provider value={{ state, setState, getState }}>s</Ctx.Provider>;
