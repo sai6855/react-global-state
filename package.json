@@ -1,5 +1,5 @@
 {
-  "version": "1.1.43",
+  "version": "1.1.44",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -51,6 +51,13 @@
       "path": "dist/react-global-state.esm.js",
       "limit": "10 KB"
     }
+  ],
+  "keywords": [
+    "react",
+    "redux",
+    "state",
+    "state managemant",
+    "global state"
   ],
   "devDependencies": {
     "@babel/core": "^7.16.0",
