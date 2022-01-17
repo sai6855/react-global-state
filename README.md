@@ -116,7 +116,7 @@ const Input = () => {
 
 **setState** uses react's **useState** hook under the hood, so as useState is **asynchronous** function setState is also asynchronous function.
 
-setState takes **2 parameters**, **1st parameter** is the value which you want to store or a function which returns the value you want to store, **2nd parameter** is a string (within " "),n where we provide path of property in a store.
+setState takes **2 parameters**, **1st parameter** is the value which you want to store or a function which returns the value you want to store, **2nd parameter** is a string, where we provide path of property in a store.
 
 For example store has firstName property and you want to update firstName value then 2nd parameter i.e., path can be written as "store.app.user.firstName". similarly if we want to update lastName then we can specify the path as "store.app.user.lastName".
 
