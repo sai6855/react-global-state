@@ -20,11 +20,13 @@ import { createContext,useProvider } from "react-manage-state";
 
 //Create your global store (which is just a javascript object)
 const defaultstore = {
-    user:{
+   app:{
+     user:{
         firstName:"",
         lastName:"",
         middleName:""
-    }
+      }
+   }
 }
 //Create a context by passing defaultStore to createContext method provided by library
 const StoreContext = createContext(defaultStore);
