@@ -85,7 +85,7 @@ const Input = () => {
   }
 
   const handleChangeType2 = (e) => {
-     setState( ()=> e.target.value, "store.app.user.lastName")
+     setState(()=> e.target.value, "store.app.user.lastName")
   }
 
   const handleChangeType3 = (e)=>{
